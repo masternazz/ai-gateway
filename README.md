@@ -4,6 +4,8 @@ A self-hosted gateway that lets you use **Claude Code**, **Codex**, and **Gemini
 
 Send a message to your Telegram bot or email your AI inbox. The gateway runs the CLI, captures the output, and replies. It maintains shared memory and per-channel conversation history across all three AIs.
 
+![AI Gateway architecture diagram](diagram.svg)
+
 ```
 Telegram / Email → AI Gateway → Claude / Codex / Gemini CLI → reply
 ```
