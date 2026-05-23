@@ -1,0 +1,23 @@
+[Unit]
+Description=AI Gateway (Telegram + Email → Claude/Codex/Gemini)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/ai-gateway
+EnvironmentFile=/opt/ai-gateway/.env
+ExecStart=/usr/bin/node /opt/ai-gateway/src/index.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ai-gateway
+
+# Resource limits
+LimitNOFILE=65536
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

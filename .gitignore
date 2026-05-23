@@ -1,0 +1,22 @@
+# Environment — never commit secrets
+.env
+CREDENTIALS_NEEDED.md
+
+# Runtime data
+repos/
+history/
+memory.md
+
+# Logs
+*.log
+logs/
+
+# SSH keys
+.ssh/
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db

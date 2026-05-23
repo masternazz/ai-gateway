@@ -1,0 +1,23 @@
+{
+  "name": "ai-gateway",
+  "version": "1.0.0",
+  "description": "Telegram + Email gateway for Claude Code, Codex CLI, Gemini CLI with GitHub operations",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "imap": "^0.8.19",
+    "mailparser": "^3.6.5",
+    "nodemailer": "^6.9.7",
+    "node-telegram-bot-api": "^0.64.0",
+    "dotenv": "^16.3.1",
+    "simple-git": "^3.21.0",
+    "winston": "^3.11.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
