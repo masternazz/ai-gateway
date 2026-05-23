@@ -1,34 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   AI Gateway — Architecture Diagram
-  Canvas: 1100 × 680
-  Layout: 4 columns, 3 data rows + 1 store row
-  All connectors are strictly horizontal or vertical (orthogonal only).
-  No line passes through any box.
+  Canvas: 1100 × 700
 
-  Column centres (box width 180 each):
-    Col1 x=30  …209   centre=119   Telegram / parser.js / git.js / Git Repos
-    Col2 x=250 …429   centre=339   Email    / memory.js / reply.js / Shared Memory
-    Col3 x=480 …659   centre=569   —        / runner.js / —         / Streaming
-    Col4 x=720 …1070  (split into 4a & 4b)
-      Claude   x=720  …899   centre=809
-      Gemini   x=720  …899   centre=809  (row 3)
-      Codex    x=920  …1069  centre=994  (row 3 alongside)
+  Layout — 3 columns left, 1 tall column right:
+    Col A  x=20  w=180  Telegram / parser / git / Git Repos
+    Col B  x=220 w=180  Email    / memory / reply / Shared Memory
+    Col C  x=420 w=180  —        / runner / —     / Streaming
+    Col D  x=640 w=440  Claude (row2 full height) / Gemini+Codex (row3) / Notes (row4)
+      Claude  x=640 w=440  y=175..345
+      Gemini  x=640 w=210  y=360..470
+      Codex   x=870 w=210  y=360..470
 
-  Vertical routing corridors (x values between columns):
-    Vc12 = x=228  (between col1 right=209 and col2 left=250)
-    Vc23 = x=458  (between col2 right=429 and col3 left=480)
-    Vc34 = x=700  (between col3 right=659 and col4 left=720)
-    Vc45 = x=1080 (right outer)
+  Horizontal corridors (clear of all boxes):
+    Hc1 = y=158  (between row1 bottom=155 and row2 top=175)
+    Hc2 = y=347  (between row2 bottom=345 and row3 top=360)
+    Hc3 = y=472  (between row3 bottom=470 and row4 top=487)
+    Hc4 = y=620  below row4
 
-  Horizontal routing corridors (y values between rows):
-    Hr0  = y=50   above row1 (row1 tops at y=70)
-    Hr12 = y=175  between row1 (bottom≈160) and row2 (top≈190)
-    Hr23 = y=355  between row2 (bottom≈340) and row3 (top≈375)
-    Hr34 = y=490  between row3 (bottom≈480) and row4 (top≈510)
-    Hr5  = y=645  below row4 (row4 bottom≈630)
+  Vertical corridors (clear of all boxes):
+    Vc1 = x=13   left outer margin
+    Vc2 = x=205  between ColA(right=200) and ColB(left=220)
+    Vc3 = x=405  between ColB(right=400) and ColC(left=420)
+    Vc4 = x=610  between ColC(right=600) and ColD(left=640)
+    Vc5 = x=1090 right outer margin
+
+  Connections — no line ever enters a box column unless terminating there:
+    Telegram → parser:     vertical x=110, y=155→175
+    Email    → memory:     vertical x=310, y=155→175
+    parser   → memory:     horizontal y=265, x=200→220
+    memory   → runner:     horizontal y=265, x=400→420
+    runner   → Claude:     horizontal y=225, x=600→640  [both in same row, clear gap]
+    runner   → Gemini:     exit runner bottom x=520, corridor Hc2 y=347, right to x=745, down to Gemini top y=360
+    runner   → Codex:      exit runner bottom x=545, corridor Hc2 y=352, right to x=975, down to Codex top y=360
+    runner   → reply:      exit runner bottom x=495, corridor Hc2 y=342, LEFT to x=310, down to reply top y=360
+    parser   → git:        vertical x=110, y=345→360   [if gitOps]
+    git      → Git Repos:  vertical x=110, y=470→487
+    reply    → Shared Mem: vertical x=310, y=470→487
+    runner   → Streaming:  vertical x=520, y=345→487   [through Hc2+Hc3 — col C is empty in row3]
+    reply    → [outputs]:  text label only — no routing line needed
 -->
-<svg width="1100" height="680" viewBox="0 0 1100 680"
+<svg width="1100" height="700" viewBox="0 0 1100 700"
      xmlns="http://www.w3.org/2000/svg"
      font-family="'Segoe UI', system-ui, sans-serif">
   <defs>
@@ -60,8 +72,6 @@
     <linearGradient id="gitG" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#884838"/><stop offset="100%" stop-color="#582820"/>
     </linearGradient>
-
-    <!-- Arrowhead markers -->
     <marker id="ab" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <path d="M0,0 L0,6 L8,3 z" fill="#4a7ab5"/>
     </marker>
@@ -77,260 +87,242 @@
   </defs>
 
   <!-- Background -->
-  <rect width="1100" height="680" fill="url(#bgG)"/>
-  <rect x="1" y="1" width="1098" height="678" rx="12" fill="none" stroke="#1c2240" stroke-width="1.5"/>
+  <rect width="1100" height="700" fill="url(#bgG)"/>
+  <rect x="1" y="1" width="1098" height="698" rx="12" fill="none" stroke="#1c2240" stroke-width="1.5"/>
 
   <!-- Title -->
-  <text x="550" y="30" text-anchor="middle" font-size="16" font-weight="700" fill="#d8e8ff" letter-spacing="0.3">AI Gateway — Architecture</text>
+  <text x="550" y="28" text-anchor="middle" font-size="17" font-weight="700" fill="#d8e8ff" letter-spacing="0.3">AI Gateway — Architecture</text>
 
-  <!-- ═══════════════════════════════════════════
-       ROW 1 — INPUTS  (y=70..160)
-       ═══════════════════════════════════════════ -->
+  <!-- ═══════════════ ROW 1 — INPUTS  y=42..155 ═══════════════ -->
 
-  <!-- Telegram  x=30 y=70 w=180 h=90 -->
-  <rect x="30" y="70" width="180" height="90" rx="7" fill="url(#teleG)" stroke="#3888d4" stroke-width="1.5"/>
-  <text x="120" y="92" text-anchor="middle" font-size="13" font-weight="700" fill="#b0d8ff">Telegram Bot</text>
-  <text x="120" y="108" text-anchor="middle" font-size="10" fill="#70a8d8">telegram.js</text>
-  <text x="120" y="124" text-anchor="middle" font-size="9.5" fill="#80a8d0">webhook · user-ID check</text>
-  <text x="120" y="140" text-anchor="middle" font-size="9.5" fill="#608898">chunked replies · streaming</text>
+  <!-- Telegram  ColA x=20 y=42 w=180 h=113 -->
+  <rect x="20" y="42" width="180" height="113" rx="7" fill="url(#teleG)" stroke="#3888d4" stroke-width="1.5"/>
+  <text x="110" y="65" text-anchor="middle" font-size="13" font-weight="700" fill="#b0d8ff">Telegram Bot</text>
+  <text x="110" y="82" text-anchor="middle" font-size="10" fill="#70a8d8">telegram.js</text>
+  <text x="110" y="99" text-anchor="middle" font-size="9.5" fill="#80a8d0">webhook · user-ID check</text>
+  <text x="110" y="115" text-anchor="middle" font-size="9.5" fill="#608898">chunked replies · streaming</text>
+  <text x="110" y="131" text-anchor="middle" font-size="9" fill="#507888">↑ receives reply from reply.js</text>
 
-  <!-- Email  x=250 y=70 w=180 h=90 -->
-  <rect x="250" y="70" width="180" height="90" rx="7" fill="url(#emailG)" stroke="#3868a8" stroke-width="1.5"/>
-  <text x="340" y="92" text-anchor="middle" font-size="13" font-weight="700" fill="#b0d8ff">Email Poller</text>
-  <text x="340" y="108" text-anchor="middle" font-size="10" fill="#70a8d8">email-poller.js</text>
-  <text x="340" y="124" text-anchor="middle" font-size="9.5" fill="#80a8d0">IMAP poll every 30 s</text>
-  <text x="340" y="140" text-anchor="middle" font-size="9.5" fill="#608898">domain allowlist · markSeen</text>
+  <!-- Email  ColB x=220 y=42 w=180 h=113 -->
+  <rect x="220" y="42" width="180" height="113" rx="7" fill="url(#emailG)" stroke="#3868a8" stroke-width="1.5"/>
+  <text x="310" y="65" text-anchor="middle" font-size="13" font-weight="700" fill="#b0d8ff">Email Poller</text>
+  <text x="310" y="82" text-anchor="middle" font-size="10" fill="#70a8d8">email-poller.js</text>
+  <text x="310" y="99" text-anchor="middle" font-size="9.5" fill="#80a8d0">IMAP poll every 30 s</text>
+  <text x="310" y="115" text-anchor="middle" font-size="9.5" fill="#608898">domain allowlist · markSeen</text>
+  <text x="310" y="131" text-anchor="middle" font-size="9" fill="#507888">↑ receives reply via SMTP</text>
 
-  <!-- Telegram → parser (straight down, x=120) -->
-  <line x1="120" y1="160" x2="120" y2="190" stroke="#4a7ab5" stroke-width="2" marker-end="url(#ab)"/>
-  <!-- Email → memory (straight down, x=340) -->
-  <line x1="340" y1="160" x2="340" y2="190" stroke="#4a7ab5" stroke-width="2" marker-end="url(#ab)"/>
+  <!-- Telegram → parser  x=110, y=155→175 -->
+  <line x1="110" y1="155" x2="110" y2="175" stroke="#4a7ab5" stroke-width="2" marker-end="url(#ab)"/>
+  <!-- Email → memory  x=310, y=155→175 -->
+  <line x1="310" y1="155" x2="310" y2="175" stroke="#4a7ab5" stroke-width="2" marker-end="url(#ab)"/>
 
-  <!-- ═══════════════════════════════════════════
-       ROW 2 — PIPELINE  (y=190..340)
-       ═══════════════════════════════════════════ -->
+  <!-- ═══════════════ ROW 2 — PIPELINE  y=175..345 ═══════════════ -->
 
-  <!-- parser.js  x=30 y=190 w=180 h=150 -->
-  <rect x="30" y="190" width="180" height="150" rx="7" fill="url(#coreG)" stroke="#2a3870" stroke-width="1.5"/>
-  <text x="120" y="212" text-anchor="middle" font-size="13" font-weight="700" fill="#c0d0ff">parser.js</text>
-  <rect x="42" y="220" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="120" y="232" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">verbose: → streaming</text>
-  <rect x="42" y="242" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="120" y="254" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">claude: / codex: / gemini:</text>
-  <rect x="42" y="264" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="120" y="276" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">GIT_PATTERNS → gitOps</text>
-  <rect x="42" y="286" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="120" y="298" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">strips git phrases from AI msg</text>
-  <rect x="42" y="308" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="120" y="320" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">memory: prefix → memoryOp</text>
+  <!-- parser.js  ColA x=20 y=175 w=180 h=170 -->
+  <rect x="20" y="175" width="180" height="170" rx="7" fill="url(#coreG)" stroke="#2a3870" stroke-width="1.5"/>
+  <text x="110" y="197" text-anchor="middle" font-size="13" font-weight="700" fill="#c0d0ff">parser.js</text>
+  <rect x="32" y="205" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="110" y="217" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">verbose: → streaming mode</text>
+  <rect x="32" y="227" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="110" y="239" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">claude: / codex: / gemini:</text>
+  <rect x="32" y="249" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="110" y="261" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">GIT_PATTERNS → gitOps</text>
+  <rect x="32" y="271" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="110" y="283" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">strips git phrases from AI msg</text>
+  <rect x="32" y="293" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="110" y="305" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">memory: prefix → memoryOp</text>
+  <rect x="32" y="315" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="110" y="327" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">detects engine prefix first</text>
 
-  <!-- parser → memory (straight horizontal, y=265) -->
-  <line x1="210" y1="265" x2="250" y2="265" stroke="#4a7ab5" stroke-width="2" marker-end="url(#ab)"/>
+  <!-- parser → memory  horizontal y=265, x=200→220 -->
+  <line x1="200" y1="265" x2="220" y2="265" stroke="#4a7ab5" stroke-width="2" marker-end="url(#ab)"/>
 
-  <!-- memory.js  x=250 y=190 w=180 h=150 -->
-  <rect x="250" y="190" width="180" height="150" rx="7" fill="url(#coreG)" stroke="#2a3870" stroke-width="1.5"/>
-  <text x="340" y="212" text-anchor="middle" font-size="13" font-weight="700" fill="#c0d0ff">memory.js</text>
-  <rect x="262" y="220" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="340" y="232" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">buildPrompt() layers context</text>
-  <rect x="262" y="242" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="340" y="254" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">memory.md → history → msg</text>
-  <rect x="262" y="264" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="340" y="276" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">MAX_HISTORY = 10 per channel</text>
-  <rect x="262" y="286" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="340" y="298" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">compactHistory() at 20 entries</text>
-  <rect x="262" y="308" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="340" y="320" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">saves memory: facts to .md</text>
+  <!-- memory.js  ColB x=220 y=175 w=180 h=170 -->
+  <rect x="220" y="175" width="180" height="170" rx="7" fill="url(#coreG)" stroke="#2a3870" stroke-width="1.5"/>
+  <text x="310" y="197" text-anchor="middle" font-size="13" font-weight="700" fill="#c0d0ff">memory.js</text>
+  <rect x="232" y="205" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="310" y="217" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">buildPrompt() layers context</text>
+  <rect x="232" y="227" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="310" y="239" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">memory.md → history → msg</text>
+  <rect x="232" y="249" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="310" y="261" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">MAX_HISTORY = 10 per channel</text>
+  <rect x="232" y="271" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="310" y="283" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">compactHistory() at 20 entries</text>
+  <rect x="232" y="293" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="310" y="305" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">saves memory: facts to .md</text>
+  <rect x="232" y="315" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="310" y="327" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">prepends to every AI prompt</text>
 
-  <!-- memory → runner (straight horizontal, y=265) -->
-  <line x1="430" y1="265" x2="480" y2="265" stroke="#4a7ab5" stroke-width="2" marker-end="url(#ab)"/>
+  <!-- memory → runner  horizontal y=265, x=400→420 -->
+  <line x1="400" y1="265" x2="420" y2="265" stroke="#4a7ab5" stroke-width="2" marker-end="url(#ab)"/>
 
-  <!-- runner.js  x=480 y=190 w=180 h=150 -->
-  <rect x="480" y="190" width="180" height="150" rx="7" fill="url(#coreG)" stroke="#2a3870" stroke-width="1.5"/>
-  <text x="570" y="212" text-anchor="middle" font-size="13" font-weight="700" fill="#c0d0ff">runner.js</text>
-  <rect x="492" y="220" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="570" y="232" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">claude/codex → stdin --print</text>
-  <rect x="492" y="242" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="570" y="254" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">gemini → --yolo -p (no stdin)</text>
-  <rect x="492" y="264" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="570" y="276" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">GEMINI_CLI_TRUST_WORKSPACE</text>
-  <rect x="492" y="286" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="570" y="298" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">runStreaming() → onChunk cb</text>
-  <rect x="492" y="308" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="570" y="320" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">timeout + stderr captured</text>
+  <!-- runner.js  ColC x=420 y=175 w=180 h=170 -->
+  <rect x="420" y="175" width="180" height="170" rx="7" fill="url(#coreG)" stroke="#2a3870" stroke-width="1.5"/>
+  <text x="510" y="197" text-anchor="middle" font-size="13" font-weight="700" fill="#c0d0ff">runner.js</text>
+  <rect x="432" y="205" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="510" y="217" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">claude/codex → stdin --print</text>
+  <rect x="432" y="227" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="510" y="239" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">gemini → --yolo -p (no stdin)</text>
+  <rect x="432" y="249" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="510" y="261" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">GEMINI_CLI_TRUST_WORKSPACE</text>
+  <rect x="432" y="271" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="510" y="283" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">runStreaming() → onChunk cb</text>
+  <rect x="432" y="293" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="510" y="305" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">timeout + stderr captured</text>
+  <rect x="432" y="315" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="510" y="327" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">output → reply.js</text>
 
-  <!--
-    Routing analysis:
-      Claude box:  x=720–1070, y=190–340
-      Gemini box:  x=720–900,  y=375–485
-      Codex box:   x=920–1070, y=375–485
-      runner box:  x=480–660,  y=190–340
-      Hr23 corridor: y=341–374 (between runner/memory bottom and git/reply top)
+  <!-- Claude Code  ColD x=640 y=175 w=440 h=170 -->
+  <rect x="640" y="175" width="440" height="170" rx="7" fill="url(#claudeG)" stroke="#d49050" stroke-width="1.5"/>
+  <text x="860" y="200" text-anchor="middle" font-size="13" font-weight="700" fill="#ffe0b0">Claude Code</text>
+  <text x="860" y="220" text-anchor="middle" font-size="10" fill="#d4aa70" font-family="monospace">claude --print · prompt via stdin</text>
+  <text x="860" y="238" text-anchor="middle" font-size="10" fill="#c09050">OAuth · Claude Max subscription</text>
+  <text x="860" y="256" text-anchor="middle" font-size="10" fill="#a07040">default engine · prefix: claude:</text>
+  <text x="860" y="274" text-anchor="middle" font-size="10" fill="#a07040">streaming: runStreaming() chunks</text>
+  <text x="860" y="292" text-anchor="middle" font-size="10" fill="#806030">context: memory.md + history</text>
+  <text x="860" y="310" text-anchor="middle" font-size="10" fill="#705020">output piped back → reply.js</text>
 
-    runner → Claude: straight right y=225 (inside row2, no boxes between x=660 and x=720).
-    runner → Gemini: exit runner bottom at x=810 (Gemini centre) → down in Hr23 to y=362
-                     → the segment x=480–660 is in col3 gap, then x=660–810 passes BELOW
-                     Claude (Claude ends y=340, corridor starts y=341) → enter Gemini top (810,375).
-                     Use x=810 vertical all the way: runner bottom (810,340)→down→(810,375).
-                     But runner bottom is at y=340 and 810 > 660 so x=810 is OUTSIDE runner.
-                     Route: from runner right at y=265 → right to x=810 → but that crosses Claude.
-
-    Safe path: runner bottom exit at x=600 (inside runner width 480–660) → down to y=363
-               → right along y=363 to x=810 → up to Gemini top (810,375).
-               y=363 is between Claude bottom (340) and Gemini top (375) — clear of all boxes.
-
-    runner → Codex: runner bottom at x=630 → down to y=368 → right to x=995 → up to Codex top.
-               y=368 is also in the Hr23 corridor, different from Gemini's y=363 so lines don't overlap.
-
-    runner → reply: already uses runner bottom x=570 → y=355 → left → up. Keep that.
-                    Three bottom exits: x=570 (reply, y=355), x=600 (Gemini, y=363), x=630 (Codex, y=368)
-                    All different x and y — no overlaps.
-  -->
-
-  <!-- runner → Claude (straight horizontal y=225, row2 interior, no boxes between x=660–720) -->
-  <line x1="660" y1="225" x2="720" y2="225" stroke="#5a6e80" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ag)"/>
-
-  <!-- runner → Gemini: down from runner bottom x=600 to y=363, right to x=810, up to Gemini top -->
-  <polyline points="600,340 600,363 810,363 810,375" fill="none" stroke="#5a6e80" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ag)"/>
-
-  <!-- runner → Codex: down from runner bottom x=635 to y=369, right to x=995, up to Codex top -->
-  <polyline points="635,340 635,369 995,369 995,375" fill="none" stroke="#5a6e80" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ag)"/>
+  <!-- runner → Claude  horizontal y=225, x=600→640 -->
+  <line x1="600" y1="225" x2="640" y2="225" stroke="#5a6e80" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ag)"/>
 
   <!--
-    runner → reply.js:
-    runner bottom (x=570, y=340) → down to Hr23=355 → left to x=340 → up to reply.js top (340, y=375)
-    Hr23 corridor y=355 is between row2 bottom (340) and row3 top (375) — 15px each side, clear.
+    ═══════════════════════════════════════════════════════════════
+    RUNNER → REPLY, GEMINI, CODEX — all via Hc2 corridor y=347..358
+    ═══════════════════════════════════════════════════════════════
+
+    runner bottom is y=345. Hc2 corridor is y=347–358 (row2 ends 345, row3 starts 360).
+    All three exits leave the runner bottom at different x, go to different y in corridor,
+    turn horizontally, then enter destination from top.
+
+    runner → reply:  exit x=460 → down to y=349 → LEFT  to x=310 → up into reply top (y=360)
+    runner → Gemini: exit x=510 → down to y=354 → RIGHT to x=745 → down into Gemini top (y=360)
+    runner → Codex:  exit x=555 → down to y=358 → RIGHT to x=975 → down into Codex top (y=360)
+
+    None of these horizontal segments overlap (different y: 349, 354, 358).
+    The leftward reply segment (y=349, x=460→310) is in ColB-ColC gap area — clear of all boxes
+    (reply.js top is y=360, memory.js bottom is y=345).
+    The rightward Gemini segment (y=354, x=510→745) passes through ColC-ColD gap (x=600–640)
+    at y=354 — ColC ends y=345, ColD (Claude) starts y=175 ends y=345, so y=354 is BELOW Claude. Clear.
   -->
-  <polyline points="570,340 570,355 340,355 340,375" fill="none" stroke="#4a7ab5" stroke-width="2" marker-end="url(#ab)"/>
 
-  <!-- Claude Code  x=720 y=190 w=350 h=150 — spans from col4 to right edge -->
-  <rect x="720" y="190" width="350" height="150" rx="7" fill="url(#claudeG)" stroke="#d49050" stroke-width="1.5"/>
-  <text x="895" y="215" text-anchor="middle" font-size="13" font-weight="700" fill="#ffe0b0">Claude Code</text>
-  <text x="895" y="233" text-anchor="middle" font-size="10" fill="#d4aa70" font-family="monospace">claude --print · prompt via stdin</text>
-  <text x="895" y="251" text-anchor="middle" font-size="10" fill="#c09050">OAuth · Claude Max subscription</text>
-  <text x="895" y="269" text-anchor="middle" font-size="10" fill="#a07040">default engine · prefix: claude:</text>
-  <text x="895" y="287" text-anchor="middle" font-size="10" fill="#a07040">streaming: runStreaming() chunks</text>
-  <text x="895" y="305" text-anchor="middle" font-size="10" fill="#806030">context: memory.md + history</text>
+  <!-- runner → reply  (exit x=460, y=349 corridor, left to x=310, into reply top) -->
+  <polyline points="460,345 460,349 310,349 310,360" fill="none" stroke="#4a7ab5" stroke-width="2" marker-end="url(#ab)"/>
 
-  <!-- ═══════════════════════════════════════════
-       ROW 2 → ROW 3 (parser conditional branch)
-       ═══════════════════════════════════════════ -->
+  <!-- runner → Gemini  (exit x=510, y=354 corridor, right to x=745, into Gemini top) -->
+  <polyline points="510,345 510,354 745,354 745,360" fill="none" stroke="#5a6e80" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ag)"/>
 
-  <!-- parser bottom → git.js top (straight down x=120, Hr23 y=355) -->
-  <line x1="120" y1="340" x2="120" y2="375" stroke="#5a6e80" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ag)"/>
-  <text x="128" y="362" font-size="9" fill="#50607a" font-style="italic">if gitOps</text>
+  <!-- runner → Codex  (exit x=555, y=358 corridor, right to x=975, into Codex top) -->
+  <polyline points="555,345 555,358 975,358 975,360" fill="none" stroke="#5a6e80" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ag)"/>
 
-  <!-- ═══════════════════════════════════════════
-       ROW 3 — GIT + REPLY + ENGINES  (y=375..480)
-       ═══════════════════════════════════════════ -->
+  <!-- ═══════════════ ROW 2 → ROW 3 other verticals ═══════════════ -->
 
-  <!-- git.js  x=30 y=375 w=180 h=110 -->
-  <rect x="30" y="375" width="180" height="110" rx="7" fill="url(#coreG)" stroke="#2a3870" stroke-width="1.5"/>
-  <text x="120" y="397" text-anchor="middle" font-size="13" font-weight="700" fill="#c0d0ff">git.js</text>
-  <rect x="42" y="405" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="120" y="417" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">cloneLocks{} per-repo promise</text>
-  <rect x="42" y="427" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="120" y="439" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">ensureCloned() checks .git dir</text>
-  <rect x="42" y="449" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="120" y="461" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">GIT_SSH_COMMAND via env</text>
-  <rect x="42" y="471" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="120" y="483" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">gitLog(repo,5) for AI context</text>
+  <!-- parser → git  (if gitOps, straight down x=110) -->
+  <line x1="110" y1="345" x2="110" y2="360" stroke="#5a6e80" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ag)"/>
+  <text x="118" y="356" font-size="9" fill="#50607a" font-style="italic">if gitOps</text>
 
-  <!-- reply.js  x=250 y=375 w=180 h=110 -->
-  <rect x="250" y="375" width="180" height="110" rx="7" fill="url(#coreG)" stroke="#2a3870" stroke-width="1.5"/>
-  <text x="340" y="397" text-anchor="middle" font-size="13" font-weight="700" fill="#c0d0ff">reply.js</text>
-  <rect x="262" y="405" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="340" y="417" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">chunkText at 4000 chars</text>
-  <rect x="262" y="427" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="340" y="439" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">Telegram: editMessageText</text>
-  <rect x="262" y="449" width="156" height="18" rx="3" fill="#090b18"/>
-  <text x="340" y="461" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">Email: SMTP inReplyTo thread</text>
+  <!-- ═══════════════ ROW 3  y=360..470 ═══════════════ -->
 
-  <!-- Gemini CLI  x=720 y=375 w=180 h=110 -->
-  <rect x="720" y="375" width="180" height="110" rx="7" fill="url(#geminiG)" stroke="#5090d4" stroke-width="1.5"/>
-  <text x="810" y="397" text-anchor="middle" font-size="13" font-weight="700" fill="#b8d8ff">Gemini CLI</text>
-  <text x="810" y="415" text-anchor="middle" font-size="10" fill="#80b0e0" font-family="monospace">gemini --yolo -p</text>
-  <text x="810" y="433" text-anchor="middle" font-size="10" fill="#80b0e0">no stdin (agentic hang fix)</text>
-  <text x="810" y="451" text-anchor="middle" font-size="10" fill="#6090c0">OAuth · Google account</text>
-  <text x="810" y="469" text-anchor="middle" font-size="10" fill="#507090">prefix: gemini:</text>
+  <!-- git.js  ColA x=20 y=360 w=180 h=110 -->
+  <rect x="20" y="360" width="180" height="110" rx="7" fill="url(#coreG)" stroke="#2a3870" stroke-width="1.5"/>
+  <text x="110" y="382" text-anchor="middle" font-size="13" font-weight="700" fill="#c0d0ff">git.js</text>
+  <rect x="32" y="390" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="110" y="402" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">cloneLocks{} per-repo mutex</text>
+  <rect x="32" y="412" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="110" y="424" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">ensureCloned() checks .git dir</text>
+  <rect x="32" y="434" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="110" y="446" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">GIT_SSH_COMMAND via env</text>
+  <rect x="32" y="456" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="110" y="468" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">gitLog(repo,5) for AI context</text>
 
-  <!-- Codex CLI  x=920 y=375 w=150 h=110 -->
-  <rect x="920" y="375" width="150" height="110" rx="7" fill="url(#codexG)" stroke="#50a070" stroke-width="1.5"/>
-  <text x="995" y="397" text-anchor="middle" font-size="13" font-weight="700" fill="#b0f0d0">Codex CLI</text>
-  <text x="995" y="415" text-anchor="middle" font-size="10" fill="#80d0a0" font-family="monospace">codex --quiet</text>
-  <text x="995" y="433" text-anchor="middle" font-size="10" fill="#80d0a0">prompt via stdin</text>
-  <text x="995" y="451" text-anchor="middle" font-size="10" fill="#60a080">OAuth · ChatGPT Plus</text>
-  <text x="995" y="469" text-anchor="middle" font-size="10" fill="#408060">prefix: codex:</text>
+  <!-- reply.js  ColB x=220 y=360 w=180 h=110 -->
+  <rect x="220" y="360" width="180" height="110" rx="7" fill="url(#coreG)" stroke="#2a3870" stroke-width="1.5"/>
+  <text x="310" y="382" text-anchor="middle" font-size="13" font-weight="700" fill="#c0d0ff">reply.js</text>
+  <rect x="232" y="390" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="310" y="402" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">chunkText() at 4000 chars</text>
+  <rect x="232" y="412" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="310" y="424" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">Telegram: editMessageText</text>
+  <rect x="232" y="434" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="310" y="446" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">Email: SMTP inReplyTo thread</text>
+  <rect x="232" y="456" width="156" height="18" rx="3" fill="#090b18"/>
+  <text x="310" y="468" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">→ Telegram Bot / Email Poller</text>
 
-  <!--
-    reply.js → back to Telegram (reply path):
-    Right edge of reply (x=430) at y=430 → right to x=458 (Vc23 corridor, 28px gap col2–col3)
-    → up to y=12 (above title text which is at y=30, border at y=1 so y=12 is safe in margin)
-    → left to x=120 → down to Telegram top (y=70).
-  -->
-  <polyline points="430,430 458,430 458,12 120,12 120,70" fill="none" stroke="#4a7ab5" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ab)"/>
+  <!-- ColC row3 is empty — runner→Streaming vertical passes through here -->
+  <!-- runner → Streaming  straight down x=510, y=345→487 (ColC row3 is empty) -->
+  <line x1="510" y1="345" x2="510" y2="487" stroke="#2a4060" stroke-width="1" stroke-dasharray="3,3" marker-end="url(#ag)"/>
 
-  <!-- ═══════════════════════════════════════════
-       ROW 3 → ROW 4 verticals
-       ═══════════════════════════════════════════ -->
+  <!-- Gemini CLI  ColD-left x=640 y=360 w=210 h=110 -->
+  <rect x="640" y="360" width="210" height="110" rx="7" fill="url(#geminiG)" stroke="#5090d4" stroke-width="1.5"/>
+  <text x="745" y="383" text-anchor="middle" font-size="13" font-weight="700" fill="#b8d8ff">Gemini CLI</text>
+  <text x="745" y="401" text-anchor="middle" font-size="10" fill="#80b0e0" font-family="monospace">gemini --yolo -p</text>
+  <text x="745" y="419" text-anchor="middle" font-size="10" fill="#80b0e0">no stdin (agentic hang fix)</text>
+  <text x="745" y="437" text-anchor="middle" font-size="10" fill="#6090c0">OAuth · Google account</text>
+  <text x="745" y="455" text-anchor="middle" font-size="10" fill="#507090">prefix: gemini:</text>
 
-  <!-- git.js → Git Repos (straight down x=120) -->
-  <line x1="120" y1="485" x2="120" y2="515" stroke="#aa5a4a" stroke-width="1.5" marker-end="url(#ared)"/>
+  <!-- Codex CLI  ColD-right x=870 y=360 w=210 h=110 -->
+  <rect x="870" y="360" width="210" height="110" rx="7" fill="url(#codexG)" stroke="#50a070" stroke-width="1.5"/>
+  <text x="975" y="383" text-anchor="middle" font-size="13" font-weight="700" fill="#b0f0d0">Codex CLI</text>
+  <text x="975" y="401" text-anchor="middle" font-size="10" fill="#80d0a0" font-family="monospace">codex --quiet</text>
+  <text x="975" y="419" text-anchor="middle" font-size="10" fill="#80d0a0">prompt via stdin</text>
+  <text x="975" y="437" text-anchor="middle" font-size="10" fill="#60a080">OAuth · ChatGPT Plus</text>
+  <text x="975" y="455" text-anchor="middle" font-size="10" fill="#408060">prefix: codex:</text>
 
-  <!-- reply.js → Shared Memory (straight down x=340) -->
-  <line x1="340" y1="485" x2="340" y2="515" stroke="#7a5aaa" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#apur)"/>
+  <!-- ═══════════════ ROW 3 → ROW 4 ═══════════════ -->
 
-  <!-- runner → Streaming (straight down x=570) -->
-  <line x1="570" y1="340" x2="570" y2="515" stroke="#2a4060" stroke-width="1" stroke-dasharray="3,3" marker-end="url(#ag)"/>
-  <!-- (this vertical x=570 does not cross any box; the runner bottom is y=340 and Streaming top is y=515 with nothing in between in col3) -->
+  <!-- git → Git Repos  x=110, straight down -->
+  <line x1="110" y1="470" x2="110" y2="487" stroke="#aa5a4a" stroke-width="1.5" marker-end="url(#ared)"/>
 
-  <!-- ═══════════════════════════════════════════
-       ROW 4 — STORES  (y=515..625)
-       ═══════════════════════════════════════════ -->
+  <!-- reply → Shared Memory  x=310, straight down -->
+  <line x1="310" y1="470" x2="310" y2="487" stroke="#7a5aaa" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#apur)"/>
 
-  <!-- Git Repos  x=30 y=515 w=180 h=110 -->
-  <rect x="30" y="515" width="180" height="110" rx="7" fill="url(#gitG)" stroke="#aa5a4a" stroke-width="1.5"/>
-  <text x="120" y="537" text-anchor="middle" font-size="12" font-weight="700" fill="#ffd0b0">Git Repos</text>
-  <text x="120" y="554" text-anchor="middle" font-size="9.5" fill="#d09070" font-family="monospace">repos/ cloned on first use</text>
-  <text x="120" y="570" text-anchor="middle" font-size="9.5" fill="#d09070" font-family="monospace">SSH key per git instance</text>
-  <text x="120" y="586" text-anchor="middle" font-size="9.5" fill="#b07050">pull / push / commit / diff / log</text>
-  <text x="120" y="602" text-anchor="middle" font-size="9.5" fill="#a06040">REPOS=name:git@github.com:...</text>
+  <!-- ═══════════════ ROW 4 — STORES  y=487..617 ═══════════════ -->
 
-  <!-- Shared Memory  x=250 y=515 w=180 h=110 -->
-  <rect x="250" y="515" width="180" height="110" rx="7" fill="url(#memG)" stroke="#6a4aaa" stroke-width="1.5"/>
-  <text x="340" y="537" text-anchor="middle" font-size="12" font-weight="700" fill="#d0b0ff">Shared Memory</text>
-  <text x="340" y="554" text-anchor="middle" font-size="9.5" fill="#a080d0" font-family="monospace">memory.md — all AIs, all channels</text>
-  <text x="340" y="570" text-anchor="middle" font-size="9.5" fill="#a080d0" font-family="monospace">history/&lt;channel&gt;.json</text>
-  <text x="340" y="586" text-anchor="middle" font-size="9.5" fill="#8060b0">memory: &lt;fact&gt; to save</text>
-  <text x="340" y="602" text-anchor="middle" font-size="9.5" fill="#6040a0">compact at 20 entries</text>
+  <!-- Git Repos  ColA x=20 y=487 w=180 h=130 -->
+  <rect x="20" y="487" width="180" height="130" rx="7" fill="url(#gitG)" stroke="#aa5a4a" stroke-width="1.5"/>
+  <text x="110" y="510" text-anchor="middle" font-size="12" font-weight="700" fill="#ffd0b0">Git Repos</text>
+  <text x="110" y="527" text-anchor="middle" font-size="9.5" fill="#d09070" font-family="monospace">repos/ cloned on first use</text>
+  <text x="110" y="543" text-anchor="middle" font-size="9.5" fill="#d09070" font-family="monospace">SSH key per git instance</text>
+  <text x="110" y="559" text-anchor="middle" font-size="9.5" fill="#b07050">pull / push / commit / diff / log</text>
+  <text x="110" y="575" text-anchor="middle" font-size="9.5" fill="#a06040">allowUnsafeSshCommand: true</text>
+  <text x="110" y="591" text-anchor="middle" font-size="9.5" fill="#906030">REPOS=name:git@github.com:...</text>
+  <text x="110" y="607" text-anchor="middle" font-size="9" fill="#704020">gitLog(repo,5) → next AI prompt</text>
 
-  <!-- Streaming  x=480 y=515 w=180 h=110 -->
-  <rect x="480" y="515" width="180" height="110" rx="7" fill="url(#coreG)" stroke="#2a3870" stroke-width="1.5"/>
-  <text x="570" y="537" text-anchor="middle" font-size="12" font-weight="700" fill="#c0d0ff">Streaming (Telegram)</text>
-  <text x="570" y="554" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">verbose: enables live mode</text>
-  <text x="570" y="570" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">editMessageText every 1500 ms</text>
-  <text x="570" y="586" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">status msg sent before spawn</text>
-  <text x="570" y="602" text-anchor="middle" font-size="9.5" fill="#607080">chunks on onChunk callback</text>
+  <!-- Shared Memory  ColB x=220 y=487 w=180 h=130 -->
+  <rect x="220" y="487" width="180" height="130" rx="7" fill="url(#memG)" stroke="#6a4aaa" stroke-width="1.5"/>
+  <text x="310" y="510" text-anchor="middle" font-size="12" font-weight="700" fill="#d0b0ff">Shared Memory</text>
+  <text x="310" y="527" text-anchor="middle" font-size="9.5" fill="#a080d0" font-family="monospace">memory.md — all AIs, all channels</text>
+  <text x="310" y="543" text-anchor="middle" font-size="9.5" fill="#a080d0" font-family="monospace">history/&lt;channel&gt;.json</text>
+  <text x="310" y="559" text-anchor="middle" font-size="9.5" fill="#8060b0">memory: &lt;fact&gt; to save</text>
+  <text x="310" y="575" text-anchor="middle" font-size="9.5" fill="#6040a0">compact at 20 entries</text>
+  <text x="310" y="591" text-anchor="middle" font-size="9.5" fill="#5030a0">MAX_HISTORY = 10 per channel</text>
 
-  <!-- Implementation Notes  x=720 y=515 w=350 h=110 -->
-  <rect x="720" y="515" width="350" height="110" rx="7" fill="#0e1220" stroke="#202850" stroke-width="1.5"/>
-  <text x="895" y="537" text-anchor="middle" font-size="12" font-weight="700" fill="#707898">Implementation Notes</text>
-  <text x="895" y="554" text-anchor="middle" font-size="9.5" fill="#485570" font-family="monospace">gemini -p flag prevents interactive/agentic stdin hang</text>
-  <text x="895" y="570" text-anchor="middle" font-size="9.5" fill="#485570" font-family="monospace">cloneLocks{} — in-memory promise prevents parallel clone race</text>
-  <text x="895" y="586" text-anchor="middle" font-size="9.5" fill="#485570" font-family="monospace">allowUnsafeSshCommand: true required for custom SSH keys</text>
-  <text x="895" y="602" text-anchor="middle" font-size="9.5" fill="#485570" font-family="monospace">gitLog(repo,5) auto-injected as AI context after git ops</text>
+  <!-- Streaming  ColC x=420 y=487 w=180 h=130 -->
+  <rect x="420" y="487" width="180" height="130" rx="7" fill="url(#coreG)" stroke="#2a3870" stroke-width="1.5"/>
+  <text x="510" y="510" text-anchor="middle" font-size="12" font-weight="700" fill="#c0d0ff">Streaming</text>
+  <text x="510" y="527" text-anchor="middle" font-size="9.5" fill="#7888b8">verbose: enables live mode</text>
+  <text x="510" y="543" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">editMessageText every 1500 ms</text>
+  <text x="510" y="559" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">status msg sent before spawn</text>
+  <text x="510" y="575" text-anchor="middle" font-size="9.5" fill="#607080">onChunk callback → edits msg</text>
+  <text x="510" y="591" text-anchor="middle" font-size="9.5" fill="#607080">Telegram only · not email</text>
 
-  <!-- ═══════════════════════════════════════════
-       LEGEND
-       ═══════════════════════════════════════════ -->
-  <rect x="30" y="640" width="740" height="26" rx="5" fill="#0a0c18" opacity="0.85"/>
-  <line x1="46" y1="653" x2="76" y2="653" stroke="#4a7ab5" stroke-width="2"/>
-  <text x="83" y="657" font-size="9.5" fill="#4a5a70">main data path</text>
-  <line x1="188" y1="653" x2="218" y2="653" stroke="#5a6e80" stroke-width="1.5" stroke-dasharray="5,3"/>
-  <text x="225" y="657" font-size="9.5" fill="#4a5a70">conditional / engine route</text>
-  <line x1="382" y1="653" x2="412" y2="653" stroke="#4a7ab5" stroke-width="1.5" stroke-dasharray="5,3"/>
-  <text x="419" y="657" font-size="9.5" fill="#4a5a70">reply path</text>
-  <line x1="490" y1="653" x2="520" y2="653" stroke="#7a5aaa" stroke-width="1.5" stroke-dasharray="4,3"/>
-  <text x="527" y="657" font-size="9.5" fill="#4a5a70">memory write</text>
-  <line x1="625" y1="653" x2="655" y2="653" stroke="#aa5a4a" stroke-width="1.5"/>
-  <text x="662" y="657" font-size="9.5" fill="#4a5a70">git store</text>
+  <!-- Implementation Notes  ColD x=640 y=487 w=440 h=130 -->
+  <rect x="640" y="487" width="440" height="130" rx="7" fill="#0e1220" stroke="#202850" stroke-width="1.5"/>
+  <text x="860" y="510" text-anchor="middle" font-size="12" font-weight="700" fill="#707898">Implementation Notes</text>
+  <text x="860" y="527" text-anchor="middle" font-size="9.5" fill="#485570" font-family="monospace">gemini -p flag prevents interactive/agentic stdin hang</text>
+  <text x="860" y="543" text-anchor="middle" font-size="9.5" fill="#485570" font-family="monospace">cloneLocks{} — in-memory promise prevents parallel clone race</text>
+  <text x="860" y="559" text-anchor="middle" font-size="9.5" fill="#485570" font-family="monospace">allowUnsafeSshCommand: true required for custom SSH keys</text>
+  <text x="860" y="575" text-anchor="middle" font-size="9.5" fill="#485570" font-family="monospace">gitLog(repo,5) auto-injected as AI context after git ops</text>
+  <text x="860" y="591" text-anchor="middle" font-size="9.5" fill="#485570" font-family="monospace">history auto-compacted when channel reaches 20 entries</text>
+
+  <!-- ═══════════════ LEGEND ═══════════════ -->
+  <rect x="20" y="635" width="760" height="26" rx="5" fill="#0a0c18" opacity="0.85"/>
+  <line x1="36" y1="648" x2="66" y2="648" stroke="#4a7ab5" stroke-width="2"/>
+  <text x="73" y="652" font-size="9.5" fill="#4a5a70">main data path</text>
+  <line x1="185" y1="648" x2="215" y2="648" stroke="#5a6e80" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="222" y="652" font-size="9.5" fill="#4a5a70">conditional / engine route</text>
+  <line x1="390" y1="648" x2="420" y2="648" stroke="#7a5aaa" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="427" y="652" font-size="9.5" fill="#4a5a70">memory write</text>
+  <line x1="530" y1="648" x2="560" y2="648" stroke="#aa5a4a" stroke-width="1.5"/>
+  <text x="567" y="652" font-size="9.5" fill="#4a5a70">git store</text>
+  <line x1="635" y1="648" x2="665" y2="648" stroke="#2a4060" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="672" y="652" font-size="9.5" fill="#4a5a70">streaming path</text>
 </svg>
