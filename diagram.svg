@@ -81,8 +81,7 @@
   <rect x="1" y="1" width="1098" height="678" rx="12" fill="none" stroke="#1c2240" stroke-width="1.5"/>
 
   <!-- Title -->
-  <text x="550" y="32" text-anchor="middle" font-size="16" font-weight="700" fill="#d8e8ff" letter-spacing="0.3">AI Gateway — Architecture</text>
-  <text x="550" y="50" text-anchor="middle" font-size="10" fill="#50607a">Telegram / Email → parser → memory → runner → Claude · Codex · Gemini → reply</text>
+  <text x="550" y="30" text-anchor="middle" font-size="16" font-weight="700" fill="#d8e8ff" letter-spacing="0.3">AI Gateway — Architecture</text>
 
   <!-- ═══════════════════════════════════════════
        ROW 1 — INPUTS  (y=70..160)
@@ -160,22 +159,41 @@
   <text x="570" y="320" text-anchor="middle" font-size="9.5" fill="#7888b8" font-family="monospace">timeout + stderr captured</text>
 
   <!--
-    runner → Claude: straight right from runner right edge (x=660) at y=228 → to Claude left (x=720) at y=228
-    runner → Gemini: runner right (660) at y=255 → right to Vc34=700 → down to y=400 → right to Gemini left (720) at y=400
-    runner → Codex:  runner right (660) at y=282 → right to x=706 → down to y=430 → right to Codex left (920) at y=430
+    Routing analysis:
+      Claude box:  x=720–1070, y=190–340
+      Gemini box:  x=720–900,  y=375–485
+      Codex box:   x=920–1070, y=375–485
+      runner box:  x=480–660,  y=190–340
+      Hr23 corridor: y=341–374 (between runner/memory bottom and git/reply top)
 
-    Vc34 corridor x=700 is 40px gap from col3 right (660) and col4 left (720).
-    Gemini and Codex use x=700 and x=706 so they don't overlap.
+    runner → Claude: straight right y=225 (inside row2, no boxes between x=660 and x=720).
+    runner → Gemini: exit runner bottom at x=810 (Gemini centre) → down in Hr23 to y=362
+                     → the segment x=480–660 is in col3 gap, then x=660–810 passes BELOW
+                     Claude (Claude ends y=340, corridor starts y=341) → enter Gemini top (810,375).
+                     Use x=810 vertical all the way: runner bottom (810,340)→down→(810,375).
+                     But runner bottom is at y=340 and 810 > 660 so x=810 is OUTSIDE runner.
+                     Route: from runner right at y=265 → right to x=810 → but that crosses Claude.
+
+    Safe path: runner bottom exit at x=600 (inside runner width 480–660) → down to y=363
+               → right along y=363 to x=810 → up to Gemini top (810,375).
+               y=363 is between Claude bottom (340) and Gemini top (375) — clear of all boxes.
+
+    runner → Codex: runner bottom at x=630 → down to y=368 → right to x=995 → up to Codex top.
+               y=368 is also in the Hr23 corridor, different from Gemini's y=363 so lines don't overlap.
+
+    runner → reply: already uses runner bottom x=570 → y=355 → left → up. Keep that.
+                    Three bottom exits: x=570 (reply, y=355), x=600 (Gemini, y=363), x=630 (Codex, y=368)
+                    All different x and y — no overlaps.
   -->
 
-  <!-- runner → Claude (straight horizontal y=228) -->
-  <line x1="660" y1="228" x2="720" y2="228" stroke="#5a6e80" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ag)"/>
+  <!-- runner → Claude (straight horizontal y=225, row2 interior, no boxes between x=660–720) -->
+  <line x1="660" y1="225" x2="720" y2="225" stroke="#5a6e80" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ag)"/>
 
-  <!-- runner → Gemini (elbow: → x=700, ↓ y=400, → to Gemini x=720) -->
-  <polyline points="660,255 700,255 700,400 720,400" fill="none" stroke="#5a6e80" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ag)"/>
+  <!-- runner → Gemini: down from runner bottom x=600 to y=363, right to x=810, up to Gemini top -->
+  <polyline points="600,340 600,363 810,363 810,375" fill="none" stroke="#5a6e80" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ag)"/>
 
-  <!-- runner → Codex (elbow: → x=706, ↓ y=440, → to Codex x=920) -->
-  <polyline points="660,282 706,282 706,440 920,440" fill="none" stroke="#5a6e80" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ag)"/>
+  <!-- runner → Codex: down from runner bottom x=635 to y=369, right to x=995, up to Codex top -->
+  <polyline points="635,340 635,369 995,369 995,375" fill="none" stroke="#5a6e80" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ag)"/>
 
   <!--
     runner → reply.js:
@@ -245,11 +263,11 @@
 
   <!--
     reply.js → back to Telegram (reply path):
-    Right edge of reply (x=430) at y=430 → right to Vc23=458 → up to Hr0=50 (above all boxes) → left to x=120 → down to Telegram top (y=70)
-    Vc23=458 is in the 50px gap between col2 right (430) and col3 left (480) — safe.
-    Hr0=50 is above all boxes (row1 starts at y=70) — safe.
+    Right edge of reply (x=430) at y=430 → right to x=458 (Vc23 corridor, 28px gap col2–col3)
+    → up to y=12 (above title text which is at y=30, border at y=1 so y=12 is safe in margin)
+    → left to x=120 → down to Telegram top (y=70).
   -->
-  <polyline points="430,430 458,430 458,50 120,50 120,70" fill="none" stroke="#4a7ab5" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ab)"/>
+  <polyline points="430,430 458,430 458,12 120,12 120,70" fill="none" stroke="#4a7ab5" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ab)"/>
 
   <!-- ═══════════════════════════════════════════
        ROW 3 → ROW 4 verticals
