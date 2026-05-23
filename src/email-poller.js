@@ -1,8 +1,9 @@
+const path = require('path');
 const Imap = require('imap');
 const { simpleParser } = require('mailparser');
 const { parse } = require('./parser');
 const { run } = require('./runner');
-const { runGitOps, repoPath } = require('./git');
+const { runGitOps, repoPath, log: gitLog } = require('./git');
 const { sendEmail } = require('./reply');
 const { buildPrompt, addToHistory, isMemoryCommand, handleMemoryCommand } = require('./memory');
 const logger = require('./logger');
@@ -92,25 +93,40 @@ async function processEmail(rawBuffer) {
     return;
   }
 
-  const { engine, prompt, gitOps, gitOnly } = parsed2;
+  const { engine, prompt, aiPrompt, gitOps, gitOnly, verbose } = parsed2;
   const channel = `email_${replyTo}`;
   let response = '';
+  let gitContext = '';
 
   if (gitOps.length > 0) {
     const gitResult = await runGitOps(gitOps);
     response += gitResult;
+    gitContext = gitResult;
+
+    if (!gitOnly) {
+      const firstRepo = gitOps[0]?.target;
+      if (firstRepo) {
+        try {
+          const recentLog = await gitLog(firstRepo, 5);
+          gitContext += `\n\nRecent commits for ${firstRepo}:\n${recentLog}`;
+        } catch (_) {}
+      }
+    }
   }
 
   if (!gitOnly) {
     const firstRepo = gitOps[0]?.target;
-    const workDir = firstRepo ? repoPath(firstRepo) : undefined;
+    const workDir = (engine === 'gemini')
+      ? path.join(__dirname, '..', 'repos')
+      : (firstRepo ? repoPath(firstRepo) : undefined);
 
-    const fullPrompt = buildPrompt(prompt, channel);
-    addToHistory(channel, 'user', prompt);
+    const promptWithGit = gitContext ? `Git context:\n${gitContext}\n\n${aiPrompt}` : aiPrompt;
+    const fullPrompt = buildPrompt(promptWithGit, channel, engine);
+    addToHistory(channel, 'user', aiPrompt);
 
     if (response) response += '\n\n';
     try {
-      const aiResult = await run(engine, fullPrompt, workDir);
+      const aiResult = await run(engine, fullPrompt, workDir, verbose);
       response += aiResult;
       addToHistory(channel, 'assistant', aiResult.slice(0, 500));
     } catch (e) {

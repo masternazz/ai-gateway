@@ -56,9 +56,10 @@ function appendMemory(fact) {
   fs.writeFileSync(MEMORY_FILE, updated + '\n');
 }
 
-function buildPrompt(userText, channel) {
+function buildPrompt(userText, channel, engine) {
   const memory = loadMemory();
   const history = loadHistory(channel);
+
 
   let context = '';
 

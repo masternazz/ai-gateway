@@ -5,6 +5,9 @@ const logger = require('./logger');
 
 const REPOS_DIR = path.join(__dirname, '..', 'repos');
 
+// Per-repo clone locks — prevents concurrent clone attempts on the same repo
+const cloneLocks = {};
+
 // Parse REPOS env: "homelab-docs:git@github.com:...,nazz-d.github.io:git@github.com:..."
 function getRepoMap() {
   const map = {};
@@ -23,16 +26,23 @@ function repoPath(name) {
   return path.join(REPOS_DIR, name);
 }
 
+function sshEnv() {
+  if (!process.env.GITHUB_SSH_KEY) return {};
+  return { GIT_SSH_COMMAND: `ssh -i ${process.env.GITHUB_SSH_KEY} -o StrictHostKeyChecking=no` };
+}
+
 function git(name) {
   const p = repoPath(name);
-  return simpleGit({
+  const sg = simpleGit({
     baseDir: p,
     config: [
-      `core.sshCommand=ssh -i ${process.env.GITHUB_SSH_KEY} -o StrictHostKeyChecking=no`,
-      `user.name=ai-gateway`,
-      `user.email=ai@masternazz.com`
-    ]
+      `user.name=${process.env.GIT_USER_NAME || 'ai-gateway'}`,
+      `user.email=${process.env.GIT_USER_EMAIL || 'ai@example.com'}`
+    ],
+    unsafe: { allowUnsafeSshCommand: true },
   });
+  if (process.env.GITHUB_SSH_KEY) sg.env({ ...process.env, ...sshEnv() });
+  return sg;
 }
 
 async function ensureCloned(name) {
@@ -41,19 +51,32 @@ async function ensureCloned(name) {
   if (!url) throw new Error(`Unknown repo: ${name}. Known repos: ${Object.keys(repoMap).join(', ')}`);
 
   const p = repoPath(name);
-  if (!fs.existsSync(p)) {
-    logger.info(`Cloning ${name} from ${url}`);
-    fs.mkdirSync(p, { recursive: true });
-    await simpleGit({
-      config: [`core.sshCommand=ssh -i ${process.env.GITHUB_SSH_KEY} -o StrictHostKeyChecking=no`]
-    }).clone(url, p);
-    logger.info(`Cloned ${name}`);
+  const gitDir = path.join(p, '.git');
+  if (fs.existsSync(gitDir)) return; // already cloned
+
+  // If a clone is already in progress for this repo, wait for it
+  if (cloneLocks[name]) {
+    await cloneLocks[name];
+    return;
   }
+
+  // Remove any partial/empty dir from a previous failed clone
+  if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: true });
+  logger.info(`Cloning ${name} from ${url}`);
+
+  const sg = simpleGit({ unsafe: { allowUnsafeSshCommand: true } });
+  if (process.env.GITHUB_SSH_KEY) sg.env({ ...process.env, ...sshEnv() });
+
+  cloneLocks[name] = sg.clone(url, p)
+    .then(() => { logger.info(`Cloned ${name}`); })
+    .finally(() => { delete cloneLocks[name]; });
+
+  await cloneLocks[name];
 }
 
 async function pull(name) {
   const p = repoPath(name);
-  const wasNew = !fs.existsSync(p);
+  const wasNew = !fs.existsSync(path.join(p, '.git'));
   await ensureCloned(name);
   if (wasNew) return `Cloned ${name} successfully`;
   logger.info(`Pulling ${name}`);
